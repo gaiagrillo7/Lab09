@@ -11,7 +11,10 @@ class Model:
         self._valore_ottimo: int = -1
         self._costo = 0
 
-        # TODO: Aggiungere eventuali altri attributi
+        # Attributi di supporto per la ricerca ricorsiva
+        self._escursioni_parco = []
+        self._max_giorni = None
+        self._max_budget = None
 
         # Caricamento
         self.load_escursioni()
@@ -73,9 +76,28 @@ class Model:
         self._costo = 0
         self._valore_ottimo = -1
 
-        # TODO
+        # 1. Filtriamo le escursioni appartenenti al parco selezionato
+        self._escursioni_parco = [
+            e for e in self.escursioni_map.values()
+            if e.id_parco == id_parco
+        ]
+
+        # 2. Salviamo i vincoli (possono essere None se l'utente non li ha inseriti)
+        self._max_giorni = max_giorni
+        self._max_budget = max_budget
+
+        # 3. Avviamo l'esplorazione ricorsiva dal primo indice (0)
+        self._ricorsione(
+            start_index=0,
+            pacchetto_parziale=[],
+            durata_corrente=0,
+            costo_corrente=0.0,
+            valore_corrente=0,
+            punti_usati=set()
+        )
 
         return self._pacchetto_ottimo, self._costo, self._valore_ottimo
+
 
     def _ricorsione(self, start_index: int, pacchetto_parziale: list, durata_corrente: int, costo_corrente: float, valore_corrente: int, punti_usati: set):
         """ Algoritmo di ricorsione che deve trovare il pacchetto che massimizza il voto complessivo dei visitatori"""
