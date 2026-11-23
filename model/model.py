@@ -38,7 +38,25 @@ class Model:
             --> Ogni Escursione ha un set di PuntoInteresse.
             --> Ogni PuntoInteresse ha un set di Escursioni.
         """
-        # TODO
+        # 1. Chiediamo al DAO tutte le righe della tabella ponte escursione_punto_interesse
+        relazioni = EscursioneDAO.get_escursioni_punti_interesse()
+
+        if relazioni is None:
+            return
+
+        # 2. Iteriamo su ogni dizionario {"id_escursione": ..., "id_punto_interesse": ...}
+        for rel in relazioni:
+            id_esc = rel["id_escursione"]
+            id_pi = rel["id_punto_interesse"]
+
+            # 3. Recuperiamo i rispettivi oggetti già caricati nelle identity map
+            escursione = self.escursioni_map.get(id_esc)
+            punto_interesse = self.punti_interesse_map.get(id_pi)
+
+            # 4. Colleghiamo bidirezionalmente i due oggetti tramite i loro set()
+            if escursione is not None and punto_interesse is not None:
+                escursione.punti_interesse.add(punto_interesse)
+                punto_interesse.escursioni.add(escursione)
 
     def genera_pacchetto(self, id_parco: str, max_giorni: int = None, max_budget: float = None):
         """
