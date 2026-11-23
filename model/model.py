@@ -102,4 +102,44 @@ class Model:
     def _ricorsione(self, start_index: int, pacchetto_parziale: list, durata_corrente: int, costo_corrente: float, valore_corrente: int, punti_usati: set):
         """ Algoritmo di ricorsione che deve trovare il pacchetto che massimizza il voto complessivo dei visitatori"""
 
-        # TODO: è possibile cambiare i parametri formali della funzione se ritenuto opportuno
+        # A - Aggiorniamo la soluzione ottima se il valore corrente migliora il massimo trovato finora
+        if valore_corrente > self._valore_ottimo:
+            self._valore_ottimo = valore_corrente
+            self._costo = costo_corrente
+            self._pacchetto_ottimo = pacchetto_parziale.copy()
+
+        # Cicliamo sulle escursioni rimanenti del parco selezionato
+        for i in range(start_index, len(self._escursioni_parco)):
+            esc = self._escursioni_parco[i]
+
+            # C - Verifica dei vincoli:
+            # 1. Durata massima (se impostata)
+            if self._max_giorni is not None and (durata_corrente + esc.durata_giorni > self._max_giorni):
+                continue
+
+            # 2. Budget massimo (se impostato)
+            if self._max_budget is not None and (costo_corrente + esc.costo > self._max_budget):
+                continue
+
+            # 3. Nessun punto di interesse duplicato
+            if not punti_usati.isdisjoint(esc.punti_interesse):
+                continue
+
+            # D - Calcolo dei nuovi valori parziali e aggiornamento stato
+            voto_escursione = sum(pi.voto_visitatori for pi in esc.punti_interesse)
+            pacchetto_parziale.append(esc)
+            punti_usati.update(esc.punti_interesse)
+
+            # E - Chiamata ricorsiva (passiamo i + 1 per non riutilizzare la stessa escursione)
+            self._ricorsione(
+                start_index=i + 1,
+                pacchetto_parziale=pacchetto_parziale,
+                durata_corrente=durata_corrente + esc.durata_giorni,
+                costo_corrente=costo_corrente + esc.costo,
+                valore_corrente=valore_corrente + voto_escursione,
+                punti_usati=punti_usati
+            )
+
+            # F - Backtracking: ripristiniamo lo stato precedente
+            pacchetto_parziale.pop()
+            punti_usati.difference_update(esc.punti_interesse)
